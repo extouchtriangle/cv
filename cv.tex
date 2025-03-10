@@ -1,0 +1,92 @@
+\documentclass[11pt,letterpaper,sans]{moderncv}
+
+\moderncvcolor{black} % 'blue' (default), 'orange', 'green', 'red',
+\moderncvstyle{banking} % 'casual', 'classic', 'oldstyle' 'banking', 'fancy'
+% 'purple', 'grey' and 'black'
+
+\usepackage[scale=0.75]{geometry} % Reduce document margins
+\addtolength{\voffset}{-3.5em}
+\addtolength{\textheight}{7em}
+\setlength{\hintscolumnwidth}{2cm} % width of dates column
+
+\newcommand{\entry}[6]%
+{\cventry[0.85em]{#4}{#3}{#2}{#1}{#5}{#6}} % banking
+\lfoot{\emph{Last updated \today}}
+
+\newcommand{\subtext}[1]{\bgroup\footnotesize\rmfamily\color{black!70}#1\egroup}
+\newcommand{\previous}[1]{\bgroup\color{black}\bfseries#1\egroup}
+
+\newcommand{\job}[4]{\smallskip\cvitemwithcomment{#2}{#1}{#3}%
+\unskip\subtext{#4}\medskip}
+
+\newcommand{\pub}[2]{\cvlistitem{#1. \\ \subtext{#2}}\smallskip}
+\newcommand{\paper}[3]{\pub{#1}{#2. \arxiv{#3}.}}
+
+\name{}{Easton Wei}
+\email{eastonwei12@gmail.com}
+\social[github]{extouchtriangle}
+\social[discord]{extouchtriangle}
+\lfoot{\emph{Last updated \today}}
+
+\begin{document}
+\makecvtitle
+\section{Contact Information}
+50 Greylynne Drive \hfill Phone: (609)662-8142 \\
+Princeton, NJ 08540 \hfill E-mail: \nolinkurl{eastonwei12@gmail.com} \\
+USA \hfill Web: \url{https://sites.google.com/view/chemistryforbeginners}
+\vskip -0.1in
+\section{Education}
+\entry{Fall 2022 -- present}{WW-P Community Middle School}{Student}{}{}{}
+\section{Awards and Results}
+\subsection{Mathematics}
+Strong background in algebra, combinatorics, number theory, and
+Euclidean geometry, linear algebra, and calculus.
+\vskip 0.1in
+\entry{February 2025}{AIME I}{10/15}{}{}{Top scorers on the AMC 10
+  and AMC 12 are invited to participate in the AIME. While the
+  competition assesses similar areas compared to the AMC 10/12,
+the problems are significantly more difficult.}
+\entry{November 2024}{MMATHS (Yale University)}{3rd place team}{}{}{MMATHS
+  is a high-school mathematics competition consisting of an individual round
+  and a team round, available to be taken at multiple venues across the
+country.}
+\entry{November 2024}{AMC 10B}{138/150, top 1\%}{Honor Roll of Distinction}{}
+{The AMC 10 is open to all American students in grades 10 and younger.
+  The problems cover concepts including algebra, combinatorics, geometry, and
+number theory.}
+\entry{May 2024}{MathCounts National Competition}{41st out of 224
+competitors}{}{}{The top 4 middle-school students in 56 U.S. states
+  and territories
+  compete in the MathCounts National Competition. The format is identical to the
+State Competition.}
+\entry{March 2024}{MathCounts NJ State Competition}{1st in Written
+Competition}{}{}{MathCounts is a middle-school competition that
+  involves an individual round and a team round.
+  The top 12 individual competitors compete in a buzzer-based round.
+  The top 4 finishers after the buzzer-based round advance to the
+National Competition.}
+\entry{February 2024}{AMC 8}{24/25, top 1\%}{Honor Roll of Distinction}{}{
+  The AMC 8 is a middle-school mathematics competition that assesses
+  geometry, number theory, algebra, and combinatorics.
+}
+\subsection{Science}
+Solid background in chemistry, biology, physics, astronomy.
+\vskip 0.1in
+\entry{February 2025}{PRISMS Science Bowl}{1st place}{}{team captain}
+{Led a 4-person team to win the championship.}
+\entry{March 2024}{NJ State Science Olympiad Competition}{1st place}{}{}{
+  Science Olympiad is a middle-school school science competition
+  that features multiple events, with questions based on physics, chemistry,
+  biology, and geology. A few events also involve engineering concepts.
+}
+\section{Skills}
+\subsection{General Computer Science}
+Python, Arch and Ubuntu Linux
+\subsection{Machine Learning}
+PyTorch, NumPy, Convolutional Neural Networks, Recurrent Neural Networks,
+Transformers (Multihead Self-Attention, Positional Encoding),
+Generative Adversarial Networks,
+Self-Supervised Learning
+\section{Hobbies}
+Tennis, Violin, Rubik's Cube
+\end{document}

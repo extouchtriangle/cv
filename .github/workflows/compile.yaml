@@ -1,31 +1,40 @@
-name: Compile CV with LuaLaTeX (Direct latexmk)
+name: Compile CV for GitHub Pages
 
 on:
   push:
     branches:
-      - main # Change this to your primary branch, e.g., master
+      - main # Trigger on push to your main branch
 
 jobs:
-  build_cv:
-    runs-on: ubuntu-latest # Using a fresh Ubuntu environment
+  build_and_deploy_cv:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # This permission is crucial for pushing to the gh-pages branch!
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4 # This action checks out your repository code into the runner [2, 5, 7, 8, 9]
+        uses: actions/checkout@v4
 
       - name: Install TeX Live packages
         run: |
           sudo apt-get update
-          # Install necessary TeX Live packages, including fontawesome5 via texlive-fonts-extra
           sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils texlive-fonts-extra latexmk
 
       - name: Compile LaTeX document with latexmk
-        run: latexmk -lualatex cv.tex # <--- IMPORTANT: Change this to the name of your main .tex file!
-        # -lualatex tells latexmk to use lualatex for compilation [14]
+        run: |
+          mkdir -p web # Ensure the web directory exists
+          cd web/
+          # Assuming cv.tex is in the root, go up one level to find it.
+          # If cv.tex is also inside the 'web' folder (e.g., web/cv.tex), just use 'latexmk -lualatex cv.tex'
+          latexmk -lualatex ../cv.tex
+        # The output cv.pdf will now be in the 'web/' directory
 
-      - name: Upload compiled PDF
-        uses: actions/upload-artifact@v4 # This action uploads the generated PDF as an artifact [3, 6, 10, 12]
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4 # This action handles deploying to gh-pages [20]
+        if: github.ref == 'refs/heads/main' # Only deploy if pushed to 'main' branch
         with:
-          name: my-cv-pdf # The name of the artifact
-          path: web/cv.pdf # <--- IMPORTANT: Change this to the name of your compiled PDF file!
-          retention-days: 7 # How long to keep the artifact (optional, default is 90 days)
+          github_token: ${{ secrets.GITHUB_TOKEN }} # GitHub's built-in token for authentication
+          publish_dir: ./web # <--- IMPORTANT: This is the directory containing your cv.pdf
+          publish_branch: gh-pages # The branch where your GitHub Pages site is served from
+          # cname: yourdomain.com # Uncomment and set if you use a custom domain

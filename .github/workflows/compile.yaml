@@ -20,28 +20,27 @@ jobs:
         id: cache-texlive # Give this step an ID so we can reference its output
         uses: actions/cache@v4
         with:
-          path: |
-            /usr/share/texlive # Main TeX Live installation from apt
-            /var/cache/apt/archives # apt downloaded package files
-            /var/lib/apt/lists # apt package lists
-          key: ${{ runner.os }}-texlive-2025-v1 # <--- IMPORTANT: Update this key (e.g., v2, v3) if you change the packages installed below!
+          path: /usr/share/texlive # <--- ONLY cache the main TeX Live installation directory
+          key: ${{ runner.os }}-texlive-2025-v1 # IMPORTANT: Update this key (e.g., v2, v3) if you change the packages installed below!
           restore-keys: |
             ${{ runner.os }}-texlive-2025- # Fallback key for minor changes
 
       - name: Install TeX Live packages (if not cached)
-        # This step will only run if the cache was NOT hit (i.e., it's a new key or no cache exists)
         if: steps.cache-texlive.outputs.cache-hit != 'true'
         run: |
           echo "TeX Live cache miss, installing packages..."
           sudo apt-get update
           sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils texlive-fonts-extra latexmk
 
+      - name: Verify TeX Live installation path (Diagnostic)
+        run: |
+          ls -l /usr/share/texlive # List contents to confirm it exists and is populated
+          lualatex --version # Check lualatex version to confirm it's runnable
+
       - name: Compile LaTeX document with latexmk
         run: |
           mkdir -p web # Ensure the web directory exists
           cd web/
-          # Assuming cv.tex is in the root, go up one level to find it.
-          # If cv.tex is also inside the 'web' folder (e.g., your-repo/web/cv.tex), just use 'latexmk -lualatex cv.tex'
           latexmk -lualatex ../cv.tex
         # The output cv.pdf will now be in the 'web/' directory
 

@@ -8,7 +8,9 @@ on:
 jobs:
   build_and_deploy_cv:
     runs-on: ubuntu-latest
-
+    env:
+      # Add the TeX Live binary directory to the PATH for the entire job
+      PATH: "/usr/share/texlive/texmf-dist/bin/x86_64-linux:${{ env.PATH }}" # <--- IMPORTANT ADDITION!
     permissions:
       contents: write # This permission is crucial for pushing to the gh-pages branch!
 
@@ -20,7 +22,7 @@ jobs:
         id: cache-texlive # Give this step an ID so we can reference its output
         uses: actions/cache@v4
         with:
-          path: /usr/share/texlive # <--- ONLY cache the main TeX Live installation directory
+          path: /usr/share/texlive # ONLY cache the main TeX Live installation directory
           key: ${{ runner.os }}-texlive-2025-v1 # IMPORTANT: Update this key (e.g., v2, v3) if you change the packages installed below!
           restore-keys: |
             ${{ runner.os }}-texlive-2025- # Fallback key for minor changes
@@ -32,15 +34,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils texlive-fonts-extra latexmk
 
-      - name: Verify TeX Live installation path (Diagnostic)
+      - name: Verify lualatex executable (Diagnostic)
         run: |
-          ls -l /usr/share/texlive # List contents to confirm it exists and is populated
-          lualatex --version # Check lualatex version to confirm it's runnable
+          echo "Checking PATH:"
+          echo $PATH
+          which lualatex # This should now find lualatex
+          lualatex --version # This should now work!
 
       - name: Compile LaTeX document with latexmk
         run: |
           mkdir -p web # Ensure the web directory exists
           cd web/
+          # Assuming cv.tex is in the root, go up one level to find it.
+          # If cv.tex is also inside the 'web' folder (e.g., your-repo/web/cv.tex), just use 'latexmk -lualatex cv.tex'
           latexmk -lualatex ../cv.tex
         # The output cv.pdf will now be in the 'web/' directory
 

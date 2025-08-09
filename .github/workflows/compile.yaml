@@ -1,4 +1,4 @@
-name: Compile CV for GitHub Pages (Cached)
+name: Compile CV for GitHub Pages (Cached - Test Bypass)
 
 on:
   push:
@@ -24,26 +24,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-texlive-2025- # Fallback key for minor changes
 
-      - name: Install TeX Live packages (if not cached)
-        if: steps.cache-texlive.outputs.cache-hit != 'true'
+      - name: Install TeX Live packages (FORCED INSTALL FOR TEST)
+        # Removed: if: steps.cache-texlive.outputs.cache-hit != 'true'
+        # This step will now always run, forcing a full apt install
         run: |
-          echo "TeX Live cache miss, installing packages..."
+          echo "Forcing full TeX Live installation for diagnostic test..."
           sudo apt-get update
           sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils texlive-fonts-extra latexmk
 
       - name: Add TeX Live binaries to PATH
         run: |
-          # This command adds the specified directory to the PATH for all subsequent steps in this job
           echo "/usr/share/texlive/texmf-dist/bin/x86_64-linux" >> $GITHUB_PATH
-        # The $GITHUB_PATH environment variable is a special file that GitHub Actions reads
-        # to update the PATH for the current job.
 
-      - name: Verify lualatex executable (Diagnostic)
+      - name: Debug TeX Live installation and lualatex
         run: |
-          echo "Checking PATH:"
-          echo $PATH
-          which lualatex # This should now find lualatex
-          lualatex --version # This should now work!
+          echo "--- Listing contents of /usr/share/texlive/texmf-dist/bin/x86_64-linux/ ---"
+          ls -la /usr/share/texlive/texmf-dist/bin/x86_64-linux/ || echo "Directory not found or accessible."
+
+          echo "--- Checking if lualatex exists and is executable ---"
+          test -x /usr/share/texlive/texmf-dist/bin/x86_64-linux/lualatex && echo "lualatex is executable at expected path." || echo "lualatex is NOT executable or does not exist at expected path."
+
+          echo "--- Attempting to run lualatex directly from its expected path ---"
+          /usr/share/texlive/texmf-dist/bin/x86_64-linux/lualatex --version || echo "Direct lualatex execution failed. Check for missing dependencies."
 
       - name: Compile LaTeX document with latexmk
         run: |

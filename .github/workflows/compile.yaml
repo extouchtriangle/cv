@@ -8,9 +8,9 @@ on:
 jobs:
   build_and_deploy_cv:
     runs-on: ubuntu-latest
+    # The 'env' block goes directly under the job definition, like this:
     env:
-      # Add the TeX Live binary directory to the PATH for the entire job
-      PATH: "/usr/share/texlive/texmf-dist/bin/x86_64-linux:${{ env.PATH }}" # <--- IMPORTANT ADDITION!
+      PATH: "/usr/share/texlive/texmf-dist/bin/x86_64-linux:${{ env.PATH }}" # <--- CORRECTED PLACEMENT!
     permissions:
       contents: write # This permission is crucial for pushing to the gh-pages branch!
 
@@ -45,8 +45,6 @@ jobs:
         run: |
           mkdir -p web # Ensure the web directory exists
           cd web/
-          # Assuming cv.tex is in the root, go up one level to find it.
-          # If cv.tex is also inside the 'web' folder (e.g., your-repo/web/cv.tex), just use 'latexmk -lualatex cv.tex'
           latexmk -lualatex ../cv.tex
         # The output cv.pdf will now be in the 'web/' directory
 

@@ -1,4 +1,4 @@
-name: Compile CV for GitHub Pages (Clean)
+name: Compile CV for GitHub Pages (Cached)
 
 on:
   push:
@@ -16,8 +16,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install TeX Live packages
+      - name: Cache TeX Live installation
+        id: cache-texlive # Give this step an ID so we can reference its output
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/share/texlive # Main TeX Live installation from apt
+            /var/cache/apt/archives # apt downloaded package files
+            /var/lib/apt/lists # apt package lists
+          key: ${{ runner.os }}-texlive-2025-v1 # <--- IMPORTANT: Update this key (e.g., v2, v3) if you change the packages installed below!
+          restore-keys: |
+            ${{ runner.os }}-texlive-2025- # Fallback key for minor changes
+
+      - name: Install TeX Live packages (if not cached)
+        # This step will only run if the cache was NOT hit (i.e., it's a new key or no cache exists)
+        if: steps.cache-texlive.outputs.cache-hit != 'true'
         run: |
+          echo "TeX Live cache miss, installing packages..."
           sudo apt-get update
           sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils texlive-fonts-extra latexmk
 
@@ -34,13 +49,12 @@ jobs:
         run: |
           mkdir deploy_cv # Create a new temporary directory for deployment
           cp web/cv.pdf deploy_cv/cv.pdf # Copy the compiled PDF into the new directory
-        # Now, only deploy_cv/cv.pdf exists in the deploy_cv folder
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4 # This action handles deploying to gh-pages [20]
-        if: github.ref == 'refs/heads/main' # Only deploy if pushed to 'main' branch
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main'
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }} # GitHub's built-in token for authentication
-          publish_dir: ./deploy_cv # <--- IMPORTANT: Now points to our temporary directory
-          publish_branch: gh-pages # The branch where your GitHub Pages site is served from
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy_cv
+          publish_branch: gh-pages
           # cname: yourdomain.com # Uncomment and set if you use a custom domain

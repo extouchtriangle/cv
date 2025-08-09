@@ -1,0 +1,33 @@
+name: Compile CV with LuaLaTeX (Direct latexmk)
+
+on:
+  push:
+    branches:
+      - main # Change this to your primary branch, e.g., master
+
+jobs:
+  build_cv:
+    runs-on: ubuntu-latest # Using a fresh Ubuntu environment
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 # This action checks out your repository code into the runner [2, 5, 7, 8, 9]
+
+      - name: Install TeX Live packages
+        run: |
+          sudo apt-get update
+          # Install a more comprehensive set of TeX Live packages that includes LuaLaTeX and latexmk
+          sudo apt-get install -y texlive-full # This is the most comprehensive option [4]
+          # OR, if texlive-full is too big/slow, try this more targeted set:
+          # sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils latexmk [1, 11, 13, 15, 16, 17, 18]
+
+      - name: Compile LaTeX document with latexmk
+        run: latexmk -lualatex cv.tex # <--- IMPORTANT: Change this to the name of your main .tex file!
+        # -lualatex tells latexmk to use lualatex for compilation [14]
+
+      - name: Upload compiled PDF
+        uses: actions/upload-artifact@v4 # This action uploads the generated PDF as an artifact [3, 6, 10, 12]
+        with:
+          name: my-cv-pdf # The name of the artifact
+          path: web/cv.pdf # <--- IMPORTANT: Change this to the name of your compiled PDF file!
+          retention-days: 7 # How long to keep the artifact (optional, default is 90 days)

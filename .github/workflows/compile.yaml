@@ -16,8 +16,8 @@ jobs:
       - name: Install TeX Live packages
         run: |
           sudo apt-get update
-          # Use the targeted set of packages for moderncv and geometry with lualatex
-          sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils latexmk
+          # Install necessary TeX Live packages, including fontawesome5 via texlive-fonts-extra
+          sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils texlive-fonts-extra latexmk
 
       - name: Compile LaTeX document with latexmk
         run: latexmk -lualatex cv.tex # <--- IMPORTANT: Change this to the name of your main .tex file!

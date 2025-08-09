@@ -15,27 +15,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cache apt packages and lists
-        id: cache-apt
-        uses: actions/cache@v4
-        with:
-          path: |
-            /var/cache/apt/archives # Cache downloaded .deb files
-            /var/lib/apt/lists # Cache apt package lists
-          key: ${{ runner.os }}-apt-${{ hashFiles('**/Dockerfile', '.github/workflows/*.yml') }}-v1 # Unique key based on OS, and any changes to workflow or Dockerfile
-          restore-keys: |
-            ${{ runner.os }}-apt- # Fallback for minor changes
-
       - name: Install TeX Live packages
-        # This step will ALWAYS run to ensure proper system setup,
-        # but apt will be fast if packages are already cached/installed.
+        # This step will ALWAYS run to ensure proper system setup.
+        # apt is efficient and will be fast if packages are already installed/cached.
         run: |
           echo "Installing/updating TeX Live packages..."
           sudo apt-get update
           sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils texlive-fonts-extra latexmk
 
-      # Removed the 'Add TeX Live binaries to PATH' step as /usr/bin is already in PATH
-      # Removed the 'Debug TeX Live installation and lualatex' step as it's no longer needed
       - name: Compile LaTeX document with latexmk
         run: |
           mkdir -p web # Ensure the web directory exists

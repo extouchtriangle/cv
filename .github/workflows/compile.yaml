@@ -1,4 +1,4 @@
-name: Compile CV for GitHub Pages
+name: Compile CV for GitHub Pages (Clean)
 
 on:
   push:
@@ -26,15 +26,21 @@ jobs:
           mkdir -p web # Ensure the web directory exists
           cd web/
           # Assuming cv.tex is in the root, go up one level to find it.
-          # If cv.tex is also inside the 'web' folder (e.g., web/cv.tex), just use 'latexmk -lualatex cv.tex'
+          # If cv.tex is also inside the 'web' folder (e.g., your-repo/web/cv.tex), just use 'latexmk -lualatex cv.tex'
           latexmk -lualatex ../cv.tex
         # The output cv.pdf will now be in the 'web/' directory
+
+      - name: Prepare PDF for deployment
+        run: |
+          mkdir deploy_cv # Create a new temporary directory for deployment
+          cp web/cv.pdf deploy_cv/cv.pdf # Copy the compiled PDF into the new directory
+        # Now, only deploy_cv/cv.pdf exists in the deploy_cv folder
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4 # This action handles deploying to gh-pages [20]
         if: github.ref == 'refs/heads/main' # Only deploy if pushed to 'main' branch
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }} # GitHub's built-in token for authentication
-          publish_dir: ./web # <--- IMPORTANT: This is the directory containing your cv.pdf
+          publish_dir: ./deploy_cv # <--- IMPORTANT: Now points to our temporary directory
           publish_branch: gh-pages # The branch where your GitHub Pages site is served from
           # cname: yourdomain.com # Uncomment and set if you use a custom domain

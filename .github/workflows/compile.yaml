@@ -1,4 +1,4 @@
-name: Compile CV for GitHub Pages (Cached - Find LuaLaTeX)
+name: Compile CV for GitHub Pages
 
 on:
   push:
@@ -15,60 +15,40 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cache TeX Live installation
-        id: cache-texlive
+      - name: Cache apt packages and lists
+        id: cache-apt
         uses: actions/cache@v4
         with:
-          path: /usr/share/texlive # Still cache this main directory
-          key: ${{ runner.os }}-texlive-2025-v1
+          path: |
+            /var/cache/apt/archives # Cache downloaded .deb files
+            /var/lib/apt/lists # Cache apt package lists
+          key: ${{ runner.os }}-apt-${{ hashFiles('**/Dockerfile', '.github/workflows/*.yml') }}-v1 # Unique key based on OS, and any changes to workflow or Dockerfile
           restore-keys: |
-            ${{ runner.os }}-texlive-2025-
+            ${{ runner.os }}-apt- # Fallback for minor changes
 
-      - name: Install TeX Live packages (FORCED INSTALL FOR TEST)
-        # Keeping this forced for now until we confirm the path
-        # You can re-add 'if: steps.cache-texlive.outputs.cache-hit != 'true'' later
+      - name: Install TeX Live packages
+        # This step will ALWAYS run to ensure proper system setup,
+        # but apt will be fast if packages are already cached/installed.
         run: |
-          echo "Forcing full TeX Live installation for diagnostic test..."
+          echo "Installing/updating TeX Live packages..."
           sudo apt-get update
           sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils texlive-fonts-extra latexmk
 
-      - name: Find LuaLaTeX executable path
-        id: find-lualatex # Give this step an ID to store the path
-        run: |
-          # Use 'which' to find it if it's in PATH, or 'find' if it's not
-          LUALATEX_PATH=$(which lualatex || find /usr -name lualatex -type f -executable 2>/dev/null | head -n 1)
-          echo "Found lualatex at: $LUALATEX_PATH"
-          echo "lualatex_path=$LUALATEX_PATH" >> $GITHUB_OUTPUT # Store path for later use
-
-      - name: Add TeX Live binaries to PATH (Dynamic)
-        # Only add to PATH if it's not already in /usr/bin or a standard location
-        # This step is now more robust based on the actual found path
-        run: |
-          LUALATEX_DIR=$(dirname "${{ steps.find-lualatex.outputs.lualatex_path }}")
-          if [[ "$LUALATEX_DIR" != "/usr/bin" && "$LUALATEX_DIR" != "/usr/local/bin" ]]; then
-            echo "Adding $LUALATEX_DIR to PATH"
-            echo "$LUALATEX_DIR" >> $GITHUB_PATH
-          else
-            echo "lualatex found in a standard PATH directory ($LUALATEX_DIR), no need to modify PATH."
-          fi
-
-      - name: Verify lualatex executable
-        run: |
-          echo "Checking PATH:"
-          echo $PATH
-          which lualatex # This should now find lualatex
-          lualatex --version # This should now work!
-
+      # Removed the 'Add TeX Live binaries to PATH' step as /usr/bin is already in PATH
+      # Removed the 'Debug TeX Live installation and lualatex' step as it's no longer needed
       - name: Compile LaTeX document with latexmk
         run: |
-          mkdir -p web
+          mkdir -p web # Ensure the web directory exists
           cd web/
+          # Assuming cv.tex is in the root, go up one level to find it.
+          # If cv.tex is also inside the 'web' folder (e.g., your-repo/web/cv.tex), just use 'latexmk -lualatex cv.tex'
           latexmk -lualatex ../cv.tex
+        # The output cv.pdf will now be in the 'web/' directory
 
       - name: Prepare PDF for deployment
         run: |
-          mkdir deploy_cv
-          cp web/cv.pdf deploy_cv/cv.pdf
+          mkdir deploy_cv # Create a new temporary directory for deployment
+          cp web/cv.pdf deploy_cv/cv.pdf # Copy the compiled PDF into the new directory
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -77,3 +57,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./deploy_cv
           publish_branch: gh-pages
+          # cname: yourdomain.com # Uncomment and set if you use a custom domain

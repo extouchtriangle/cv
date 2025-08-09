@@ -1,4 +1,4 @@
-name: Compile CV for GitHub Pages (Cached - Test Bypass)
+name: Compile CV for GitHub Pages (Cached - Find LuaLaTeX)
 
 on:
   push:
@@ -16,48 +16,59 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cache TeX Live installation
-        id: cache-texlive # Give this step an ID so we can reference its output
+        id: cache-texlive
         uses: actions/cache@v4
         with:
-          path: /usr/share/texlive # ONLY cache the main TeX Live installation directory
-          key: ${{ runner.os }}-texlive-2025-v1 # IMPORTANT: Update this key (e.g., v2, v3) if you change the packages installed below!
+          path: /usr/share/texlive # Still cache this main directory
+          key: ${{ runner.os }}-texlive-2025-v1
           restore-keys: |
-            ${{ runner.os }}-texlive-2025- # Fallback key for minor changes
+            ${{ runner.os }}-texlive-2025-
 
       - name: Install TeX Live packages (FORCED INSTALL FOR TEST)
-        # Removed: if: steps.cache-texlive.outputs.cache-hit != 'true'
-        # This step will now always run, forcing a full apt install
+        # Keeping this forced for now until we confirm the path
+        # You can re-add 'if: steps.cache-texlive.outputs.cache-hit != 'true'' later
         run: |
           echo "Forcing full TeX Live installation for diagnostic test..."
           sudo apt-get update
           sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils texlive-fonts-extra latexmk
 
-      - name: Add TeX Live binaries to PATH
+      - name: Find LuaLaTeX executable path
+        id: find-lualatex # Give this step an ID to store the path
         run: |
-          echo "/usr/share/texlive/texmf-dist/bin/x86_64-linux" >> $GITHUB_PATH
+          # Use 'which' to find it if it's in PATH, or 'find' if it's not
+          LUALATEX_PATH=$(which lualatex || find /usr -name lualatex -type f -executable 2>/dev/null | head -n 1)
+          echo "Found lualatex at: $LUALATEX_PATH"
+          echo "lualatex_path=$LUALATEX_PATH" >> $GITHUB_OUTPUT # Store path for later use
 
-      - name: Debug TeX Live installation and lualatex
+      - name: Add TeX Live binaries to PATH (Dynamic)
+        # Only add to PATH if it's not already in /usr/bin or a standard location
+        # This step is now more robust based on the actual found path
         run: |
-          echo "--- Listing contents of /usr/share/texlive/texmf-dist/bin/x86_64-linux/ ---"
-          ls -la /usr/share/texlive/texmf-dist/bin/x86_64-linux/ || echo "Directory not found or accessible."
+          LUALATEX_DIR=$(dirname "${{ steps.find-lualatex.outputs.lualatex_path }}")
+          if [[ "$LUALATEX_DIR" != "/usr/bin" && "$LUALATEX_DIR" != "/usr/local/bin" ]]; then
+            echo "Adding $LUALATEX_DIR to PATH"
+            echo "$LUALATEX_DIR" >> $GITHUB_PATH
+          else
+            echo "lualatex found in a standard PATH directory ($LUALATEX_DIR), no need to modify PATH."
+          fi
 
-          echo "--- Checking if lualatex exists and is executable ---"
-          test -x /usr/share/texlive/texmf-dist/bin/x86_64-linux/lualatex && echo "lualatex is executable at expected path." || echo "lualatex is NOT executable or does not exist at expected path."
-
-          echo "--- Attempting to run lualatex directly from its expected path ---"
-          /usr/share/texlive/texmf-dist/bin/x86_64-linux/lualatex --version || echo "Direct lualatex execution failed. Check for missing dependencies."
+      - name: Verify lualatex executable
+        run: |
+          echo "Checking PATH:"
+          echo $PATH
+          which lualatex # This should now find lualatex
+          lualatex --version # This should now work!
 
       - name: Compile LaTeX document with latexmk
         run: |
-          mkdir -p web # Ensure the web directory exists
+          mkdir -p web
           cd web/
           latexmk -lualatex ../cv.tex
-        # The output cv.pdf will now be in the 'web/' directory
 
       - name: Prepare PDF for deployment
         run: |
-          mkdir deploy_cv # Create a new temporary directory for deployment
-          cp web/cv.pdf deploy_cv/cv.pdf # Copy the compiled PDF into the new directory
+          mkdir deploy_cv
+          cp web/cv.pdf deploy_cv/cv.pdf
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -66,4 +77,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./deploy_cv
           publish_branch: gh-pages
-          # cname: yourdomain.com # Uncomment and set if you use a custom domain

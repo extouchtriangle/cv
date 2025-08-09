@@ -8,9 +8,6 @@ on:
 jobs:
   build_and_deploy_cv:
     runs-on: ubuntu-latest
-    # The 'env' block goes directly under the job definition, like this:
-    env:
-      PATH: "/usr/share/texlive/texmf-dist/bin/x86_64-linux:${{ env.PATH }}" # <--- CORRECTED PLACEMENT!
     permissions:
       contents: write # This permission is crucial for pushing to the gh-pages branch!
 
@@ -33,6 +30,13 @@ jobs:
           echo "TeX Live cache miss, installing packages..."
           sudo apt-get update
           sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-luatex texlive-extra-utils texlive-fonts-extra latexmk
+
+      - name: Add TeX Live binaries to PATH
+        run: |
+          # This command adds the specified directory to the PATH for all subsequent steps in this job
+          echo "/usr/share/texlive/texmf-dist/bin/x86_64-linux" >> $GITHUB_PATH
+        # The $GITHUB_PATH environment variable is a special file that GitHub Actions reads
+        # to update the PATH for the current job.
 
       - name: Verify lualatex executable (Diagnostic)
         run: |
